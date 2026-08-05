@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatika Kelas X - Berpikir Komputasional</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS (via CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Confetti JS -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#65DCD5',    /* Tosca */
+                        primaryDark: '#4BB5AE',
+                        secondary: '#43637E',  /* Hijau/Biru Gelap */
+                        accent: '#FFFFFF',
+                        purpleApp: '#8B5CF6', /* Tambahan ungu untuk sertifikat */
+                    },
+                    boxShadow: {
+                        'canva': '0 4px 12px rgba(0,0,0,0.08), 0 0 2px rgba(0,0,0,0.05)',
+                        'canva-hover': '0 8px 24px rgba(0,0,0,0.12), 0 0 4px rgba(0,0,0,0.05)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Animations */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        .slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .bounce-hover:hover { transform: translateY(-5px); transition: transform 0.3s ease; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Hide elements during print (for certificate) */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificate-container, #certificate-container * {
+                visibility: visible;
+            }
+            #certificate-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* Glassmorphism utils */
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .dark .glass {
+            background: rgba(31, 41, 55, 0.85);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #65DCD5; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #43637E; }
+        
+        .dark ::-webkit-scrollbar-track { background: #1f2937; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300 min-h-screen flex flex-col">
+
+    <!-- BGM Audio (Hidden) -->
+    <audio id="bgm" loop>
+        <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
+    </audio>
+
+    <header class="glass sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-md">
+                    CT
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-secondary dark:text-primary">Berpikir Komputasional</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Informatika SMA Kelas X</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Progress Bar Container -->
+                <div class="hidden sm:flex flex-col items-end mr-4">
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Progres Belajar: <span id="progress-text">0%</span></span>
+                    <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
+                        <div id="progress-bar" class="h-full bg-primary transition-all duration-500 w-0"></div>
+                    </div>
+                </div>
+
+                <!-- BGM Toggle -->
+                <button id="btn-bgm" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-primary hover:text-white transition-colors flex items-center justify-center" title="Musik Latar">
+                    <i class="fas fa-music"></i>
+                </button>
+
+                <!-- Dark Mode Toggle -->
+                <button id="btn-theme" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-secondary hover:text-white transition-colors flex items-center justify-center" title="Mode Terang/Gelap">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-5xl relative">
+        
+        <!-- Screen: Login / Identitas -->
+        <section id="screen-login" class="slide-up max-w-md mx-auto mt-10">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-canva p-8 text-center border-t-4 border-primary">
+                <img src="https://placehold.co/150x150/65DCD5/ffffff?text=CT" alt="Logo" class="mx-auto rounded-full mb-6 w-24 h-24 shadow-md">
+                <h2 class="text-2xl font-bold text-secondary dark:text-white mb-2">Selamat Datang!</h2>
+                <p class="text-gray-500 dark:text-gray-400 mb-6 text-sm">Mari belajar 4 Pilar Berpikir Komputasional. Silakan isi data dirimu terlebih dahulu.</p>
+                
+                <div class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1 text-secondary dark:text-gray-300">Nama Lengkap</label>
+                        <input type="text" id="input-name" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all" placeholder="Contoh: Budi Santoso">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1 text-secondary dark:text-gray-300">Kelas</label>
+                        <input type="text" id="input-class" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all" placeholder="Contoh: X IPA 1">
+                    </div>
+                    <button onclick="startApp()" class="w-full bg-primary hover:bg-primaryDark text-white font-bold py-3 rounded-xl shadow-lg transition-all bounce-hover mt-4">
+                        Mulai Belajar <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-home" class="hidden fade-in">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-secondary dark:text-primary mb-3">Peta Perjalanan Belajarmu</h2>
+                <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Halo, <span id="display-name" class="font-bold text-primary">Siswa</span>! Pilih modul di bawah ini secara berurutan untuk memaksimalkan pemahamanmu tentang Berpikir Komputasional.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="menu-grid">
+                <!-- Cards will be injected by JS -->
+            </div>
+            
+            <!-- Badges Section -->
+            <div class="mt-12 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-canva border border-gray-100 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-secondary dark:text-white mb-4"><i class="fas fa-medal text-yellow-500 mr-2"></i> Pencapaian Kamu</h3>
+                <div class="flex gap-4 flex-wrap" id="badge-container">
+                    <div class="text-sm text-gray-500 dark:text-gray-400 italic">Selesaikan misi untuk mendapatkan lencana!</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-apersepsi" class="hidden fade-in">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-canva overflow-hidden">
+                <div class="bg-secondary p-6 text-white text-center">
+                    <h2 class="text-2xl font-bold"><i class="fas fa-lightbulb text-yellow-300 mr-2"></i> Apersepsi</h2>
+                    <p class="text-blue-100 mt-2">Mari kita mulai dengan sebuah kasus.</p>
+                </div>
+                <div class="p-8">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <!-- Placeholder Video/Image -->
+                            <div class="relative rounded-2xl overflow-hidden shadow-lg aspect-video bg-gray-200 dark:bg-gray-700 flex items-center justify-center group">
+                                <img src="https://placehold.co/600x400/65DCD5/ffffff?text=Ilustrasi+Pemecahan+Masalah" alt="Ilustrasi" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <i class="fas fa-play-circle text-white text-5xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="bg-teal-50 dark:bg-gray-700 border-l-4 border-primary p-5 rounded-r-xl">
+                                <h3 class="font-bold text-lg text-secondary dark:text-primary mb-2">Pernahkah kamu...</h3>
+                                <p class="text-gray-700 dark:text-gray-200">Ingin membuat nasi goreng spesial di rumah sendirian, tetapi kamu sama sekali tidak tahu bahan apa saja yang dibutuhkan dan bagaimana langkah-langkah memasaknya?</p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <p class="font-semibold text-gray-800 dark:text-white">Pertanyaan Pemantik:</p>
+                                <ul class="list-disc pl-5 space-y-2 text-gray-600 dark:text-gray-300">
+                                    <li>Apa yang akan terjadi jika kamu langsung memasukkan semua bahan ke wajan tanpa urutan?</li>
+                                    <li>Bagaimana caramu memecahkan masalah besar "membuat nasi goreng" menjadi hal-hal kecil yang bisa dikerjakan?</li>
+                                    <li>Menurutmu, apakah pola pikir saat membuat masakan sama dengan cara komputer menyelesaikan masalah?</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-xl border border-yellow-200 dark:border-yellow-700">
+                                <p class="text-sm text-yellow-800 dark:text-yellow-200"><i class="fas fa-info-circle mr-1"></i> Simpan jawabanmu dalam hati. Kita akan menemukan jawabannya di materi selanjutnya!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-asesmen-awal" class="hidden fade-in">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-canva p-8">
+                <div class="text-center mb-8 border-b border-gray-100 dark:border-gray-700 pb-6">
+                    <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-3">Tantangan Awal</span>
+                    <h2 class="text-2xl font-bold text-secondary dark:text-white">Seberapa Tahu Kamu?</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">Jawab 5 pertanyaan ini untuk mengetahui pengetahuan awalmu. Jangan takut salah, ini bukan ujian akhir!</p>
+                </div>
+                
+                <div id="asesmen-awal-container" class="space-y-8">
+                    <!-- Questions injected via JS -->
+                </div>
+
+                <div id="asesmen-awal-result" class="hidden mt-8 text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-2xl">
+                    <!-- Result injected via JS -->
+                </div>
+
+                <div class="mt-8 text-center" id="asesmen-awal-btn-container">
+                    <button onclick="submitAsesmenAwal()" class="bg-primary hover:bg-primaryDark text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all bounce-hover">
+                        Kirim Jawaban
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-materi" class="hidden fade-in">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-canva overflow-hidden">
+                <div class="bg-primary p-8 text-center text-white relative">
+                    <div class="absolute top-0 right-0 p-4 opacity-20 text-6xl"><i class="fas fa-brain"></i></div>
+                    <h2 class="text-3xl font-extrabold relative z-10">4 Pilar Berpikir Komputasional</h2>
+                    <p class="mt-2 text-primary-100 text-lg relative z-10 opacity-90">Fondasi memecahkan masalah ala Ilmuwan Komputer.</p>
+                </div>
+                
+                <!-- Navigation Tabs -->
+                <div class="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+                    <button onclick="showMateriTab(1)" id="tab-1" class="materi-tab flex-1 py-4 px-6 text-center font-bold text-primary border-b-4 border-primary bg-gray-50 dark:bg-gray-700 transition-colors whitespace-nowrap">1. Dekomposisi</button>
+                    <button onclick="showMateriTab(2)" id="tab-2" class="materi-tab flex-1 py-4 px-6 text-center font-semibold text-gray-500 hover:text-secondary dark:text-gray-400 border-b-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap">2. Pengenalan Pola</button>
+                    <button onclick="showMateriTab(3)" id="tab-3" class="materi-tab flex-1 py-4 px-6 text-center font-semibold text-gray-500 hover:text-secondary dark:text-gray-400 border-b-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap">3. Abstraksi</button>
+                    <button onclick="showMateriTab(4)" id="tab-4" class="materi-tab flex-1 py-4 px-6 text-center font-semibold text-gray-500 hover:text-secondary dark:text-gray-400 border-b-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap">4. Algoritma</button>
+                </div>
+
+                <div class="p-6 md:p-10">
+                    <!-- Content 1: Dekomposisi -->
+                    <div id="materi-content-1" class="materi-content space-y-6">
+                        <div class="flex flex-col md:flex-row gap-6 items-center">
+                            <div class="flex-1">
+                                <h3 class="text-2xl font-bold text-secondary dark:text-white mb-3">Dekomposisi <span class="text-primary text-xl">(Decomposition)</span></h3>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
+                                    Dekomposisi adalah teknik memecah masalah yang besar dan kompleks menjadi bagian-bagian yang lebih kecil, sederhana, dan mudah dikelola.
+                                </p>
+                                <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 border-l-4 border-secondary">
+                                    <h4 class="font-bold text-gray-800 dark:text-white mb-2"><i class="fas fa-bicycle mr-2"></i>Contoh Sehari-hari:</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">Saat memahami cara kerja sepeda, kita memecahnya menjadi bagian kecil: sistem kemudi (stang), sistem penggerak (pedal, rantai), dan roda. Jika rantai rusak, kita hanya fokus memperbaiki rantai, bukan membuang seluruh sepeda.</p>
+                                </div>
+                            </div>
+                            <div class="w-full md:w-1/3">
+                                <img src="https://placehold.co/400x300/e2e8f0/43637E?text=Masalah+Besar+%3D%3E+Kecil" alt="Dekomposisi" class="rounded-2xl shadow-md w-full">
+                            </div>
+                        </div>
+                        <div class="bg-teal-100 dark:bg-teal-900/50 p-5 rounded-2xl">
+                            <h4 class="font-bold text-teal-800 dark:text-teal-200 flex items-center"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Tahukah Kamu?</h4>
+                            <p class="text-teal-700 dark:text-teal-300 text-sm mt-1">Dokter menggunakan dekomposisi untuk mendiagnosis penyakit. Mereka memeriksa gejala satu per satu (suhu tubuh, tekanan darah, hasil lab) sebelum menentukan penyakit pasien.</p>
+                        </div>
+                    </div>
+
+                    <!-- Content 2: Pengenalan Pola -->
+                    <div id="materi-content-2" class="materi-content hidden space-y-6">
+                        <div class="flex flex-col md:flex-row gap-6 items-center">
+                            <div class="flex-1">
+                                <h3 class="text-2xl font-bold text-secondary dark:text-white mb-3">Pengenalan Pola <span class="text-primary text-xl">(Pattern Recognition)</span></h3>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
+                                    Setelah memecah masalah, kita mencari kesamaan, tren, atau pola di antara bagian-bagian kecil tersebut. Mengenali pola membantu kita menyelesaikan masalah baru menggunakan cara yang pernah sukses sebelumnya.
+                                </p>
+                                <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 border-l-4 border-secondary">
+                                    <h4 class="font-bold text-gray-800 dark:text-white mb-2"><i class="fas fa-cloud-sun mr-2"></i>Contoh Sehari-hari:</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">Melihat langit mendung gelap, angin berhembus kencang, dan udara terasa lembab. Dari pengalaman (pola) sebelumnya, kondisi ini biasanya berarti akan turun hujan, sehingga kamu menyiapkan payung.</p>
+                                </div>
+                            </div>
+                            <div class="w-full md:w-1/3">
+                                <img src="https://placehold.co/400x300/e2e8f0/43637E?text=Mencari+Kesamaan" alt="Pengenalan Pola" class="rounded-2xl shadow-md w-full">
+                            </div>
+                        </div>
+                        <div class="bg-teal-100 dark:bg-teal-900/50 p-5 rounded-2xl">
+                            <h4 class="font-bold text-teal-800 dark:text-teal-200 flex items-center"><i class="fas fa-robot text-teal-600 mr-2"></i> Fakta Menarik</h4>
+                            <p class="text-teal-700 dark:text-teal-300 text-sm mt-1">Sistem Face Unlock di HP kamu menggunakan pengenalan pola yang sangat canggih untuk memetakan titik-titik di wajahmu dan mencocokkannya dengan data yang disimpan!</p>
+                        </div>
+                    </div>
+
+                    <!-- Content 3: Abstraksi -->
+                    <div id="materi-content-3" class="materi-content hidden space-y-6">
+                        <div class="flex flex-col md:flex-row gap-6 items-center">
+                            <div class="flex-1">
+                                <h3 class="text-2xl font-bold text-secondary dark:text-white mb-3">Abstraksi <span class="text-primary text-xl">(Abstraction)</span></h3>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
+                                    Abstraksi berarti fokus pada informasi yang penting dan mengabaikan detail-detail kecil yang tidak relevan dengan masalah yang sedang diselesaikan.
+                                </p>
+                                <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 border-l-4 border-secondary">
+                                    <h4 class="font-bold text-gray-800 dark:text-white mb-2"><i class="fas fa-map-marked-alt mr-2"></i>Contoh Sehari-hari:</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">Saat menggunakan Google Maps, aplikasi hanya menampilkan jalan, nama tempat, dan rute. Aplikasi mengabaikan jumlah pohon di pinggir jalan atau warna cat rumah penduduk karena itu tidak penting untuk navigasi.</p>
+                                </div>
+                            </div>
+                            <div class="w-full md:w-1/3">
+                                <img src="https://placehold.co/400x300/e2e8f0/43637E?text=Fokus+yang+Penting" alt="Abstraksi" class="rounded-2xl shadow-md w-full">
+                            </div>
+                        </div>
+                        <div class="bg-teal-100 dark:bg-teal-900/50 p-5 rounded-2xl">
+                            <h4 class="font-bold text-teal-800 dark:text-teal-200 flex items-center"><i class="fas fa-book text-teal-600 mr-2"></i> Info Penting</h4>
+                            <p class="text-teal-700 dark:text-teal-300 text-sm mt-1">Tanpa abstraksi, kita akan kewalahan oleh terlalu banyak informasi. Menyusun rangkuman/resume dari buku tebal adalah bentuk nyata dari abstraksi.</p>
+                        </div>
+                    </div>
+
+                    <!-- Content 4: Algoritma -->
+                    <div id="materi-content-4" class="materi-content hidden space-y-6">
+                        <div class="flex flex-col md:flex-row gap-6 items-center">
+                            <div class="flex-1">
+                                <h3 class="text-2xl font-bold text-secondary dark:text-white mb-3">Algoritma <span class="text-primary text-xl">(Algorithm Design)</span></h3>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
+                                    Algoritma adalah merancang langkah-langkah terstruktur dan logis untuk menyelesaikan masalah atau mencapai tujuan tertentu. Langkah ini harus jelas dan memiliki urutan yang benar.
+                                </p>
+                                <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 border-l-4 border-secondary">
+                                    <h4 class="font-bold text-gray-800 dark:text-white mb-2"><i class="fas fa-list-ol mr-2"></i>Contoh Sehari-hari:</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">Resep membuat Indomie rebus: 1) Rebus air hingga mendidih. 2) Masukkan mi. 3) Tunggu 3 menit. 4) Tuang bumbu ke mangkok. 5) Tiriskan mi dan campur bumbu. Jika urutannya diubah (bumbu direbus dulu), hasilnya mungkin tidak enak.</p>
+                                </div>
+                            </div>
+                            <div class="w-full md:w-1/3">
+                                <img src="https://placehold.co/400x300/e2e8f0/43637E?text=Langkah+Logis" alt="Algoritma" class="rounded-2xl shadow-md w-full">
+                            </div>
+                        </div>
+                        <div class="bg-teal-100 dark:bg-teal-900/50 p-5 rounded-2xl">
+                            <h4 class="font-bold text-teal-800 dark:text-teal-200 flex items-center"><i class="fas fa-code text-teal-600 mr-2"></i> Tahukah Kamu?</h4>
+                            <p class="text-teal-700 dark:text-teal-300 text-sm mt-1">Semua program komputer, game, dan aplikasi media sosial yang kamu gunakan sehari-hari pada dasarnya adalah kumpulan algoritma super kompleks yang dijalankan oleh mesin!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-simulasi" class="hidden fade-in">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-canva p-8">
+                <div class="text-center mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+                    <h2 class="text-3xl font-bold text-secondary dark:text-white">Aktivitas Mencocokkan</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">Pasangkan contoh kegiatan sehari-hari dengan Pilar CT yang tepat!</p>
+                </div>
+                
+                <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-xl mb-6 text-sm text-blue-800 dark:text-blue-200">
+                    <i class="fas fa-info-circle mr-2"></i> <strong>Instruksi:</strong> Pilih pilar yang tepat dari menu dropdown (kotak pilihan) untuk setiap pernyataan di bawah ini.
+                </div>
+
+                <div class="space-y-4" id="matching-game-container">
+                    <!-- Injected by JS -->
+                </div>
+
+                <div class="mt-8 text-center flex flex-col items-center">
+                    <button onclick="checkMatchingGame()" class="bg-primary hover:bg-primaryDark text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all bounce-hover">
+                        Cek Jawaban <i class="fas fa-check-circle ml-2"></i>
+                    </button>
+                    <div id="matching-feedback" class="mt-4 w-full max-w-lg hidden p-4 rounded-xl font-semibold">
+                        <!-- Feedback text -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-kuis" class="hidden fade-in">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-canva p-6 md:p-8 relative">
+                <!-- Header Kuis -->
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-2xl font-bold text-secondary dark:text-white">Kuis Interaktif HOTS</h2>
+                    <div class="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 px-4 py-2 rounded-lg font-mono font-bold text-lg shadow-sm flex items-center">
+                        <i class="fas fa-clock mr-2"></i> <span id="quiz-timer">10:00</span>
+                    </div>
+                </div>
+
+                <!-- Kuis Content Area -->
+                <div id="quiz-intro" class="text-center py-10">
+                    <i class="fas fa-laptop-code text-6xl text-primary mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2 dark:text-white">Siap Uji Pemahamanmu?</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-lg mx-auto">Kuis ini berisi 10 pertanyaan (High Order Thinking Skills). Waktu pengerjaan 10 menit. Nilai akan langsung muncul dan ada pembahasan di setiap soal setelah dijawab.</p>
+                    <button onclick="startQuiz()" class="bg-primary hover:bg-primaryDark text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all bounce-hover text-lg">
+                        Mulai Kuis
+                    </button>
+                </div>
+
+                <div id="quiz-area" class="hidden">
+                    <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2 font-semibold">
+                        <span>Soal <span id="quiz-current-num">1</span> dari 10</span>
+                    </div>
+                    <!-- Mini Progress Bar -->
+                    <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-6">
+                        <div id="quiz-progress" class="h-full bg-primary transition-all duration-300 rounded-full w-10%"></div>
+                    </div>
+
+                    <div id="quiz-question-container" class="bg-gray-50 dark:bg-gray-700 p-6 rounded-2xl mb-6 shadow-inner text-lg text-gray-800 dark:text-white font-medium">
+                        <!-- Question goes here -->
+                    </div>
+
+                    <div id="quiz-options" class="space-y-3">
+                        <!-- Options go here -->
+                    </div>
+
+                    <div id="quiz-feedback-box" class="hidden mt-6 p-5 rounded-xl border border-gray-200 shadow-sm relative">
+                        <h4 id="quiz-feedback-title" class="font-bold text-lg mb-2 flex items-center"></h4>
+                        <p id="quiz-feedback-desc" class="text-gray-700 dark:text-gray-200 text-sm leading-relaxed"></p>
+                        <button onclick="nextQuizQuestion()" class="mt-4 bg-secondary text-white px-5 py-2 rounded-lg text-sm hover:bg-opacity-90 absolute right-5 bottom-5">
+                            Lanjut <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                        <div class="pb-10"></div> <!-- spacing for absolute button -->
+                    </div>
+                </div>
+
+                <div id="quiz-result" class="hidden text-center py-10">
+                    <h3 class="text-3xl font-bold text-secondary dark:text-white mb-2">Skor Kuis Kamu</h3>
+                    <div class="text-6xl font-extrabold text-primary mb-4" id="quiz-final-score">0</div>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6" id="quiz-final-message"></p>
+                    <button onclick="finishSection('kuis')" class="bg-primary hover:bg-primaryDark text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all bounce-hover">
+                        Kembali ke Menu Utama
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-asesmen-akhir" class="hidden fade-in">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-canva p-6 md:p-8">
+                <div class="text-center mb-8 border-b border-gray-100 dark:border-gray-700 pb-6">
+                    <span class="inline-block px-3 py-1 bg-purple-100 text-purpleApp rounded-full text-sm font-semibold mb-3">Evaluasi Akhir</span>
+                    <h2 class="text-3xl font-bold text-secondary dark:text-white">Ujian Akhir Pembelajaran</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">10 Pertanyaan untuk menentukan kelulusanmu dalam modul ini. Berusahalah mencapai predikat Sangat Baik!</p>
+                </div>
+
+                <div id="asesmen-akhir-start" class="text-center py-6">
+                    <button onclick="startAsesmenAkhir()" class="bg-purpleApp hover:bg-purple-700 text-white font-bold py-3 px-10 rounded-xl shadow-lg transition-all bounce-hover text-lg">
+                        Mulai Asesmen Akhir <i class="fas fa-flag-checkered ml-2"></i>
+                    </button>
+                </div>
+
+                <div id="asesmen-akhir-area" class="hidden">
+                    <div id="asesmen-akhir-container" class="space-y-8">
+                        <!-- Questions injected via JS -->
+                    </div>
+                    
+                    <div class="mt-8 text-center border-t border-gray-200 dark:border-gray-700 pt-6">
+                        <button onclick="submitAsesmenAkhir()" class="bg-purpleApp hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all bounce-hover">
+                            Selesaikan & Lihat Nilai
+                        </button>
+                    </div>
+                </div>
+
+                <div id="asesmen-akhir-result" class="hidden mt-8 text-center p-8 bg-gray-50 dark:bg-gray-900 rounded-3xl border-2 border-purple-100 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-500 dark:text-gray-400">Nilai Akhir:</h3>
+                    <div id="akhir-score-display" class="text-7xl font-extrabold my-4 text-purpleApp">100</div>
+                    <div id="akhir-predicate" class="text-2xl font-bold mb-6 px-6 py-2 rounded-full inline-block bg-green-100 text-green-700">Sangat Baik</div>
+                    <p id="akhir-message" class="text-gray-600 dark:text-gray-300 mb-6"></p>
+                    <button onclick="finishSection('asesmen-akhir')" class="bg-secondary hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all bounce-hover">
+                        Lanjut ke Refleksi <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-refleksi" class="hidden fade-in">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-canva p-8">
+                <div class="text-center mb-6">
+                    <i class="fas fa-comments text-5xl text-primary mb-3"></i>
+                    <h2 class="text-3xl font-bold text-secondary dark:text-white">Jurnal Refleksi</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">Mari sejenak merenungkan apa yang telah kamu pelajari hari ini.</p>
+                </div>
+                
+                <div class="space-y-6 max-w-3xl mx-auto">
+                    <div>
+                        <label class="block text-gray-700 dark:text-gray-200 font-semibold mb-2">1. Saya sudah memahami...</label>
+                        <textarea class="w-full p-4 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white resize-none" rows="3" placeholder="Ketik jawabanmu di sini..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 dark:text-gray-200 font-semibold mb-2">2. Hal yang paling menarik adalah...</label>
+                        <textarea class="w-full p-4 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white resize-none" rows="3" placeholder="Ketik jawabanmu di sini..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 dark:text-gray-200 font-semibold mb-2">3. Hal yang masih membingungkan adalah...</label>
+                        <textarea class="w-full p-4 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white resize-none" rows="3" placeholder="Ketik jawabanmu di sini..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 dark:text-gray-200 font-semibold mb-2">4. Rencana saya setelah belajar materi ini adalah...</label>
+                        <textarea class="w-full p-4 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white resize-none" rows="3" placeholder="Ketik jawabanmu di sini..."></textarea>
+                    </div>
+                    <div class="text-right pt-4">
+                        <button onclick="submitRefleksi()" class="bg-primary hover:bg-primaryDark text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all bounce-hover">
+                            Simpan Refleksi & Dapatkan Sertifikat <i class="fas fa-award ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-sertifikat" class="hidden fade-in">
+            <div class="text-center mb-8 no-print">
+                <h2 class="text-3xl font-bold text-secondary dark:text-white">Selamat!</h2>
+                <p class="text-gray-500 dark:text-gray-400 mt-2">Kamu telah menyelesaikan seluruh rangkaian materi. Berikut adalah sertifikat penghargaanmu.</p>
+                <div class="mt-6 flex justify-center gap-4">
+                    <button onclick="window.print()" class="bg-secondary hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg shadow transition-all bounce-hover flex items-center">
+                        <i class="fas fa-print mr-2"></i> Cetak / Simpan PDF
+                    </button>
+                    <button onclick="navigateTo('home')" class="bg-gray-200 text-gray-700 hover:bg-gray-300 font-bold py-2 px-6 rounded-lg shadow transition-all flex items-center">
+                        <i class="fas fa-home mr-2"></i> Kembali ke Awal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Certificate Container (A4 Landscape aspect ratio roughly) -->
+            <div id="certificate-container" class="max-w-4xl mx-auto bg-white p-2 sm:p-8 rounded-none sm:rounded-3xl shadow-none sm:shadow-2xl relative overflow-hidden border-8 border-purple-50">
+                <!-- Certificate Background Elements -->
+                <div class="absolute top-0 left-0 w-64 h-64 bg-primary rounded-br-full opacity-20 -z-0"></div>
+                <div class="absolute bottom-0 right-0 w-80 h-80 bg-purpleApp rounded-tl-full opacity-10 -z-0"></div>
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-5 text-9xl -z-0"><i class="fas fa-award"></i></div>
+                
+                <div class="relative z-10 text-center p-8 sm:p-12 border-4 border-dashed border-gray-200 bg-white bg-opacity-80 h-full flex flex-col justify-center">
+                    <h4 class="text-primary font-extrabold tracking-widest uppercase mb-2">SMA KHALIFAH BOARDING SCHOOL</h4>
+                    <h1 class="text-4xl sm:text-5xl font-serif text-gray-800 mb-8 mt-2" style="font-family: 'Times New Roman', serif;">SERTIFIKAT KOMPETENSI</h1>
+                    
+                    <p class="text-gray-600 text-lg mb-2">Diberikan kepada:</p>
+                    <h2 id="cert-name" class="text-3xl sm:text-4xl font-bold text-secondary border-b-2 border-primary inline-block px-8 pb-2 mb-4 capitalize">Nama Siswa</h2>
+                    <p class="text-gray-600 text-lg mb-8">Kelas: <span id="cert-class" class="font-semibold">X</span></p>
+                    
+                    <p class="text-gray-600 max-w-xl mx-auto leading-relaxed mb-8">
+                        Telah berhasil menyelesaikan pembelajaran dengan Materi: <br>
+                        <strong class="text-purpleApp text-xl">4 Pilar Berpikir Komputasional</strong><br>
+                        (Dekomposisi, Pengenalan Pola, Abstraksi, Algoritma)
+                    </p>
+                    
+                    <div class="flex justify-center items-center gap-16 mt-4">
+                        <div class="text-center">
+                            <p class="text-gray-500 text-sm mb-1">Nilai Akhir</p>
+                            <div id="cert-score" class="text-4xl font-black text-secondary">0</div>
+                            <div id="cert-predicate" class="text-xs font-bold uppercase text-primary tracking-wider mt-1">Predikat</div>
+                        </div>
+                        <div class="w-px h-16 bg-gray-300"></div>
+                        <div class="text-center">
+                            <p class="text-gray-500 text-sm mb-1">Tanggal Penyelesaian</p>
+                            <div id="cert-date" class="text-lg font-bold text-secondary mt-2">DD/MM/YYYY</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12 text-center">
+                        <div class="w-32 border-b border-gray-800 mx-auto mb-2"></div>
+                        <p class="text-sm font-bold text-gray-800">Guru Informatika</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-4 mt-8 no-print transition-colors">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-gray-500 dark:text-gray-400">© 2026 SMA KHALIFAH BOARDING SCHOOL - INFORMATIKA</p>
+            
+            <div id="bottom-nav" class="hidden flex gap-2">
+                <button onclick="navigatePrev()" id="btn-prev" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg text-sm font-semibold transition-colors dark:text-white">
+                    <i class="fas fa-chevron-left mr-1"></i> Sebelumnya
+                </button>
+                <button onclick="navigateNext()" id="btn-next" class="px-4 py-2 bg-primary hover:bg-primaryDark text-white rounded-lg text-sm font-semibold transition-colors">
+                    Selanjutnya <i class="fas fa-chevron-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- State Management ---
+        const state = {
+            user: { name: '', class: '' },
+            scores: { awal: 0, kuis: 0, akhir: 0 },
+            progress: new Set(),
+            currentScreen: 'login',
+            theme: 'light',
+            bgm: false,
+            quizInterval: null,
+            quizTime: 600, // 10 minutes in seconds
+            currentQuizIndex: 0,
+            menuOrder: [
+                'apersepsi', 'asesmen-awal', 'materi', 'simulasi', 
+                'kuis', 'asesmen-akhir', 'refleksi', 'sertifikat'
+            ]
+        };
+
+        // --- Data Konten ---
+        const menuData = [
+            { id: 'apersepsi', title: 'Apersepsi', icon: 'fa-lightbulb', color: 'bg-yellow-100 text-yellow-600', desc: 'Pemantik materi' },
+            { id: 'asesmen-awal', title: 'Asesmen Awal', icon: 'fa-clipboard-question', color: 'bg-blue-100 text-blue-600', desc: 'Cek pemahaman awal' },
+            { id: 'materi', title: 'Materi Pembelajaran', icon: 'fa-book-open', color: 'bg-teal-100 text-teal-600', desc: '4 Pilar CT' },
+            { id: 'simulasi', title: 'Aktivitas Interaktif', icon: 'fa-puzzle-piece', color: 'bg-pink-100 text-pink-600', desc: 'Mari menjodohkan' },
+            { id: 'kuis', title: 'Kuis Interaktif', icon: 'fa-laptop-code', color: 'bg-orange-100 text-orange-600', desc: '10 Soal HOTS' },
+            { id: 'asesmen-akhir', title: 'Asesmen Akhir', icon: 'fa-flag-checkered', color: 'bg-purple-100 text-purple-600', desc: 'Ujian kelulusan' },
+            { id: 'refleksi', title: 'Refleksi', icon: 'fa-comments', color: 'bg-indigo-100 text-indigo-600', desc: 'Jurnal belajar' },
+            { id: 'sertifikat', title: 'Sertifikat', icon: 'fa-award', color: 'bg-green-100 text-green-600', desc: 'Hasil belajarmu' },
+        ];
+
+        const soalAwal = [
+            { q: "Apa yang kamu lakukan jika disuruh membuat acara pensi sekolah?", opts: ["Menangis", "Menyusun panitia dan membagi tugas", "Membuat acara sendiri", "Membatalkan acara"], ans: 1 },
+            { q: "Kemampuan memecah masalah besar menjadi kecil disebut...", opts: ["Abstraksi", "Pengenalan Pola", "Dekomposisi", "Algoritma"], ans: 2 },
+            { q: "Mencari rute tercepat ke sekolah di Google Maps tanpa mempedulikan warna rumah di pinggir jalan adalah contoh dari...", opts: ["Dekomposisi", "Abstraksi", "Algoritma", "Pengenalan Pola"], ans: 1 },
+            { q: "Langkah-langkah resep masakan merupakan contoh dari...", opts: ["Algoritma", "Abstraksi", "Pengenalan Pola", "Dekomposisi"], ans: 0 },
+            { q: "Berpikir komputasional berarti...", opts: ["Berpikir seperti robot", "Berpikir memecahkan masalah dengan logika", "Belajar merakit komputer", "Menghafal kode pemrograman"], ans: 1 }
+        ];
+
+        const simulasiData = [
+            { term: "Dekomposisi", desc: "Membongkar komputer rusak untuk memeriksa RAM, hardisk, dan kipas satu per satu." },
+            { term: "Pengenalan Pola", desc: "Menyadari bahwa setiap hari Senin, jalanan depan sekolah selalu macet jam 06:30." },
+            { term: "Abstraksi", desc: "Melihat daftar menu di restoran tanpa perlu tahu nama koki atau suplier sayurnya." },
+            { term: "Algoritma", desc: "Buku manual perakitan lemari yang berisi urutan langkah dari A sampai Z." }
+        ];
+
+        // 10 HOTS Quiz
+        const kuisData = [
+            { q: "Budi ingin membuat aplikasi pemesanan kantin. Ia memilah fitur menjadi: Login, Menu Makanan, Keranjang, dan Pembayaran. Proses ini disebut?", opts: ["Abstraksi", "Dekomposisi", "Algoritma", "Pengenalan Pola"], ans: 1, exp: "Memecah aplikasi besar menjadi fitur-fitur kecil yang bisa dikerjakan terpisah adalah Dekomposisi." },
+            { q: "Seorang detektif menemukan bahwa dalam 3 kasus pencurian, pelaku selalu masuk lewat jendela tak terkunci pada jam 2 pagi. Pilar apa yang digunakan detektif?", opts: ["Pengenalan Pola", "Abstraksi", "Dekomposisi", "Algoritma"], ans: 0, exp: "Menemukan kesamaan dari beberapa kejadian berbeda adalah Pengenalan Pola." },
+            { q: "Saat merancang mobil balap untuk game, programmer hanya memprogram kecepatan, akselerasi, dan handling, tanpa memprogram interior kulit jok mobil. Ini adalah bentuk...", opts: ["Algoritma", "Pengenalan Pola", "Dekomposisi", "Abstraksi"], ans: 3, exp: "Abstraksi membuang detail yang tidak penting (jok) untuk fokus pada yang relevan (performa mobil)." },
+            { q: "Flowchart (diagram alir) paling erat kaitannya dengan pilar CT yang mana?", opts: ["Abstraksi", "Algoritma", "Dekomposisi", "Pengenalan Pola"], ans: 1, exp: "Flowchart adalah representasi visual dari Algoritma (langkah terstruktur)." },
+            { q: "Kamu diminta mengelola perpustakaan. Kamu mengelompokkan buku berdasarkan genre, lalu rak, lalu abjad. Proses pengelompokan ini dominan menggunakan...", opts: ["Dekomposisi", "Pengenalan Pola", "Abstraksi", "Semua salah"], ans: 0, exp: "Memecah tumpukan buku menjadi kategori yang lebih spesifik adalah Dekomposisi." },
+            { q: "Manakah yang BUKAN contoh Algoritma?", opts: ["Aturan minum obat dokter", "Cara mengikat tali sepatu", "Daftar belanjaan di pasar", "Buku manual perakitan mainan"], ans: 2, exp: "Daftar belanjaan hanya data acak, tidak memiliki langkah berurutan untuk menyelesaikan masalah, sehingga bukan Algoritma." },
+            { q: "Mengapa abstraksi penting dalam sains?", opts: ["Agar lebih rumit", "Untuk membuang variabel yang tidak mempengaruhi eksperimen", "Untuk memecah masalah", "Untuk membuat kesimpulan berulang"], ans: 1, exp: "Abstraksi membantu ilmuwan fokus pada variabel utama dan mengabaikan gangguan luar." },
+            { q: "Sistem rekomendasi YouTube menyarankan video kucing setelah kamu menonton 3 video anjing lucu. Ini didasarkan pada...", opts: ["Algoritma dan Pengenalan Pola", "Hanya Dekomposisi", "Hanya Abstraksi", "Tidak ada kaitan dengan CT"], ans: 0, exp: "Sistem mengenali pola tontonanmu dan menjalankan algoritma untuk menyajikan rekomendasi serupa." },
+            { q: "Di bawah ini, manakah urutan pemecahan masalah CT yang sering (namun tidak kaku) dilakukan programmer?", opts: ["Algoritma -> Abstraksi -> Pola -> Dekomposisi", "Dekomposisi -> Pengenalan Pola -> Abstraksi -> Algoritma", "Abstraksi -> Dekomposisi -> Algoritma -> Pola", "Pola -> Algoritma -> Abstraksi -> Dekomposisi"], ans: 1, exp: "Biasanya kita memecah masalah (Dekomposisi), mencari pola, membuang detail (Abstraksi), lalu membuat langkah (Algoritma)." },
+            { q: "Apa esensi utama dari Computational Thinking (Berpikir Komputasional)?", opts: ["Bisa merakit PC", "Menjadi hacker", "Memformulasikan masalah agar solusinya bisa dieksekusi secara logis oleh manusia/komputer", "Belajar bahasa C++"], ans: 2, exp: "CT adalah kerangka berpikir logis untuk memecahkan masalah, bukan sekadar urusan teknis komputer." }
+        ];
+
+        const soalAkhir = [
+            { q: "Membagi sistem tata surya menjadi planet, satelit, dan bintang adalah contoh...", opts: ["Abstraksi", "Dekomposisi", "Algoritma", "Pola"], ans: 1 },
+            { q: "Menyortir pakaian kotor berdasarkan warna sebelum mencuci adalah contoh penerapan...", opts: ["Pengenalan Pola", "Abstraksi", "Dekomposisi", "Algoritma"], ans: 0 },
+            { q: "Membuat peta rute bus TransJakarta dengan garis warna-warni tanpa menggambar gedung di sekitarnya disebut...", opts: ["Abstraksi", "Pola", "Algoritma", "Dekomposisi"], ans: 0 },
+            { q: "Instruksi: 'Jika nilai > 75 maka LULUS, jika tidak maka REMEDIAL'. Ini adalah struktur dasar dari...", opts: ["Dekomposisi", "Abstraksi", "Algoritma", "Pola"], ans: 2 },
+            { q: "Seorang koki merancang resep baru dengan menggabungkan teknik masak yang sama dari 3 resep lamanya. Koki ini menggunakan...", opts: ["Dekomposisi", "Pengenalan Pola", "Abstraksi", "Algoritma"], ans: 1 },
+            { q: "Pilar CT mana yang berfokus pada 'menyembunyikan kerumitan'?", opts: ["Algoritma", "Dekomposisi", "Abstraksi", "Pola"], ans: 2 },
+            { q: "Kamu ingin merencanakan liburan. Kamu membaginya menjadi: Tiket, Penginapan, dan Itinerary. Ini disebut?", opts: ["Abstraksi", "Dekomposisi", "Algoritma", "Pola"], ans: 1 },
+            { q: "Langkah-langkah evakuasi kebakaran di gedung adalah contoh dari...", opts: ["Pola", "Abstraksi", "Dekomposisi", "Algoritma"], ans: 3 },
+            { q: "Mendeteksi email spam berdasarkan kata kunci 'hadiah', 'menang', 'klik' adalah contoh penggunaan...", opts: ["Pengenalan Pola", "Abstraksi", "Dekomposisi", "Algoritma"], ans: 0 },
+            { q: "Berpikir komputasional sangat berguna karena...", opts: ["Berlaku untuk masalah di berbagai bidang, bukan hanya IT", "Hanya untuk anak IT", "Bisa instan menyelesaikan masalah tanpa usaha", "Hanya dipakai untuk matematika"], ans: 0 }
+        ];
+
+        window.onload = function() {
+            setupEventListeners();
+            checkTheme();
+        };
+
+        function setupEventListeners() {
+            document.getElementById('btn-theme').addEventListener('click', toggleTheme);
+            document.getElementById('btn-bgm').addEventListener('click', toggleBGM);
+            
+            // Generate Menu Cards
+            const menuContainer = document.getElementById('menu-grid');
+            menuData.forEach((item, index) => {
+                menuContainer.innerHTML += `
+                    <div onclick="navigateTo('${item.id}')" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-canva hover:shadow-canva-hover transition-all cursor-pointer border border-gray-100 dark:border-gray-700 bounce-hover group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-gray-50 dark:to-gray-700 rounded-bl-full opacity-50"></div>
+                        <div class="${item.color} w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                            <i class="fas ${item.icon}"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-800 dark:text-white text-lg mb-1">${index + 1}. ${item.title}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">${item.desc}</p>
+                        
+                        <!-- Lock Overlay (Optional logic: can lock future steps, but for now we keep it open for flexibility) -->
+                        <div id="badge-${item.id}" class="hidden absolute top-4 right-4 text-green-500">
+                            <i class="fas fa-check-circle text-xl"></i>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Generate Asesmen Awal
+            const awContainer = document.getElementById('asesmen-awal-container');
+            soalAwal.forEach((s, idx) => {
+                let optsHtml = s.opts.map((o, i) => `
+                    <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer transition-colors w-full">
+                        <input type="radio" name="awal-${idx}" value="${i}" class="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary">
+                        <span class="ml-3 text-gray-700 dark:text-gray-300">${o}</span>
+                    </label>
+                `).join('');
+                awContainer.innerHTML += `
+                    <div class="bg-gray-50 dark:bg-gray-700 p-5 rounded-2xl">
+                        <p class="font-semibold text-gray-800 dark:text-white mb-3">${idx + 1}. ${s.q}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${optsHtml}</div>
+                    </div>
+                `;
+            });
+
+            // Generate Matching Game
+            const matchContainer = document.getElementById('matching-game-container');
+            let shuffledTerms = [...simulasiData].sort(() => 0.5 - Math.random());
+            
+            simulasiData.forEach((s, idx) => {
+                let optionsHtml = `<option value="">-- Pilih Pilar CT --</option>`;
+                shuffledTerms.forEach(term => {
+                    optionsHtml += `<option value="${term.term}">${term.term}</option>`;
+                });
+                
+                matchContainer.innerHTML += `
+                    <div class="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl items-center">
+                        <div class="flex-1 text-gray-700 dark:text-gray-200">${idx+1}. "${s.desc}"</div>
+                        <div class="w-full md:w-1/3">
+                            <select id="match-${idx}" class="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-primary">
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Generate Asesmen Akhir
+            const akContainer = document.getElementById('asesmen-akhir-container');
+            soalAkhir.forEach((s, idx) => {
+                let optsHtml = s.opts.map((o, i) => `
+                    <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-purple-50 dark:hover:bg-gray-700 cursor-pointer transition-colors w-full">
+                        <input type="radio" name="akhir-${idx}" value="${i}" class="w-4 h-4 text-purpleApp bg-gray-100 border-gray-300 focus:ring-purple-500">
+                        <span class="ml-3 text-gray-700 dark:text-gray-300">${o}</span>
+                    </label>
+                `).join('');
+                akContainer.innerHTML += `
+                    <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-5 rounded-2xl shadow-sm">
+                        <p class="font-semibold text-gray-800 dark:text-white mb-3">${idx + 1}. ${s.q}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${optsHtml}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const btn = document.getElementById('btn-theme');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                btn.innerHTML = '<i class="fas fa-moon"></i>';
+                state.theme = 'light';
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                btn.innerHTML = '<i class="fas fa-sun"></i>';
+                state.theme = 'dark';
+            }
+        }
+
+        function checkTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('btn-theme').innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        }
+
+        function toggleBGM() {
+            const audio = document.getElementById('bgm');
+            const btn = document.getElementById('btn-bgm');
+            if (state.bgm) {
+                audio.pause();
+                btn.innerHTML = '<i class="fas fa-music"></i>';
+                btn.classList.remove('bg-primary', 'text-white');
+            } else {
+                audio.play().catch(() => alert("Silakan berinteraksi dengan halaman terlebih dahulu."));
+                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                btn.classList.add('bg-primary', 'text-white');
+            }
+            state.bgm = !state.bgm;
+        }
+
+        function updateProgress() {
+            const perc = Math.round((state.progress.size / menuData.length) * 100);
+            document.getElementById('progress-text').innerText = `${perc}%`;
+            document.getElementById('progress-bar').style.width = `${perc}%`;
+            
+            // Update Badges UI
+            state.progress.forEach(id => {
+                const badgeId = `badge-${id}`;
+                if(document.getElementById(badgeId)) {
+                    document.getElementById(badgeId).classList.remove('hidden');
+                }
+            });
+            
+            // Badge Dashboard
+            if(state.progress.size > 0) {
+                const badgeCont = document.getElementById('badge-container');
+                let bHtml = '';
+                state.progress.forEach(id => {
+                    const md = menuData.find(m => m.id === id);
+                    if(md) {
+                        bHtml += `<div class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold shadow-sm"><i class="fas ${md.icon} mr-1"></i> ${md.title}</div>`;
+                    }
+                });
+                badgeCont.innerHTML = bHtml;
+            }
+        }
+
+        function startApp() {
+            const name = document.getElementById('input-name').value.trim();
+            const cls = document.getElementById('input-class').value.trim();
+            
+            if(!name || !cls) {
+                alert("Mohon isi Nama dan Kelas terlebih dahulu ya!");
+                return;
+            }
+            
+            state.user.name = name;
+            state.user.class = cls;
+            document.getElementById('display-name').innerText = name;
+            
+            // Update Certificate early
+            document.getElementById('cert-name').innerText = name;
+            document.getElementById('cert-class').innerText = cls;
+            const today = new Date();
+            document.getElementById('cert-date').innerText = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+
+            navigateTo('home');
+            
+            // Try to play BGM gently on first interaction if user hasn't explicitly toggled
+            if(!state.bgm) toggleBGM();
+        }
+
+        function navigateTo(screenId) {
+            // Hide current
+            document.getElementById(`screen-${state.currentScreen}`).classList.add('hidden');
+            // Show new
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+            
+            // Manage Bottom Nav (Hidden on home and login)
+            const bNav = document.getElementById('bottom-nav');
+            if(screenId === 'home' || screenId === 'login' || screenId === 'sertifikat') {
+                bNav.classList.add('hidden');
+            } else {
+                bNav.classList.remove('hidden');
+            }
+
+            state.currentScreen = screenId;
+            window.scrollTo(0, 0);
+
+            // Special initializations based on route
+            if(screenId === 'materi') showMateriTab(1);
+        }
+
+        function navigateNext() {
+            const idx = state.menuOrder.indexOf(state.currentScreen);
+            if(idx < state.menuOrder.length - 1) {
+                navigateTo(state.menuOrder[idx+1]);
+            }
+        }
+
+        function navigatePrev() {
+            const idx = state.menuOrder.indexOf(state.currentScreen);
+            if(idx > 0) {
+                navigateTo(state.menuOrder[idx-1]);
+            } else {
+                navigateTo('home');
+            }
+        }
+
+        function finishSection(id) {
+            state.progress.add(id);
+            updateProgress();
+            navigateTo('home');
+        }
+
+        function showMateriTab(num) {
+            // Hide all contents
+            document.querySelectorAll('.materi-content').forEach(el => el.classList.add('hidden'));
+            // Reset tabs
+            document.querySelectorAll('.materi-tab').forEach(el => {
+                el.classList.remove('border-primary', 'text-primary', 'font-bold');
+                el.classList.add('border-transparent', 'text-gray-500', 'font-semibold');
+            });
+            
+            // Show active
+            document.getElementById(`materi-content-${num}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${num}`);
+            activeTab.classList.add('border-primary', 'text-primary', 'font-bold');
+            activeTab.classList.remove('border-transparent', 'text-gray-500');
+
+            if(num === 4) {
+                // If they reach the last tab, mark materi as complete
+                setTimeout(() => finishSection('materi'), 2000);
+            }
+        }
+
+        function submitAsesmenAwal() {
+            let score = 0;
+            let answered = 0;
+            
+            soalAwal.forEach((s, idx) => {
+                const selected = document.querySelector(`input[name="awal-${idx}"]:checked`);
+                if(selected) {
+                    answered++;
+                    if(parseInt(selected.value) === s.ans) score += 20;
+                }
+            });
+
+            if(answered < soalAwal.length) {
+                alert("Harap jawab semua pertanyaan.");
+                return;
+            }
+
+            state.scores.awal = score;
+            document.getElementById('asesmen-awal-btn-container').classList.add('hidden');
+            const res = document.getElementById('asesmen-awal-result');
+            res.classList.remove('hidden');
+            
+            let message = score > 60 ? "Hebat! Pemahaman awalmu sudah bagus." : "Tidak apa-apa! Mari kita pelajari bersama.";
+            res.innerHTML = `
+                <h3 class="text-2xl font-bold mb-2 dark:text-white">Skor Kamu: ${score}/100</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">${message}</p>
+                <button onclick="finishSection('asesmen-awal')" class="bg-primary hover:bg-primaryDark text-white font-bold py-2 px-6 rounded-lg transition-colors">Lanjut Belajar</button>
+            `;
+        }
+
+        function checkMatchingGame() {
+            let correctCount = 0;
+            simulasiData.forEach((s, idx) => {
+                const sel = document.getElementById(`match-${idx}`);
+                // Basic styling reset
+                sel.classList.remove('border-green-500', 'border-red-500', 'ring-green-200', 'ring-red-200');
+                
+                if(sel.value === s.term) {
+                    correctCount++;
+                    sel.classList.add('border-green-500', 'ring-2', 'ring-green-200');
+                } else if(sel.value !== "") {
+                    sel.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                }
+            });
+
+            const fb = document.getElementById('matching-feedback');
+            fb.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-yellow-100', 'text-yellow-700');
+            
+            if(correctCount === simulasiData.length) {
+                fb.classList.add('bg-green-100', 'text-green-700');
+                fb.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Luar biasa! Kamu berhasil menjodohkan semua pilar dengan tepat. Pemahamanmu (Growth Mindset) semakin berkembang!';
+                setTimeout(() => finishSection('simulasi'), 3000);
+            } else {
+                fb.classList.add('bg-yellow-100', 'text-yellow-700');
+                fb.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i> Kamu berhasil mencocokkan ${correctCount} dari ${simulasiData.length}. Kegagalan adalah awal dari kesuksesan, ayo coba perbaiki yang masih salah!`;
+            }
+        }
+
+        function startQuiz() {
+            document.getElementById('quiz-intro').classList.add('hidden');
+            document.getElementById('quiz-area').classList.remove('hidden');
+            state.currentQuizIndex = 0;
+            state.scores.kuis = 0;
+            state.quizTime = 600;
+            
+            // Start Timer
+            clearInterval(state.quizInterval);
+            state.quizInterval = setInterval(updateQuizTimer, 1000);
+            
+            loadQuizQuestion();
+        }
+
+        function updateQuizTimer() {
+            if(state.quizTime <= 0) {
+                clearInterval(state.quizInterval);
+                finishQuiz();
+                return;
+            }
+            state.quizTime--;
+            let m = Math.floor(state.quizTime / 60).toString().padStart(2, '0');
+            let s = (state.quizTime % 60).toString().padStart(2, '0');
+            document.getElementById('quiz-timer').innerText = `${m}:${s}`;
+        }
+
+        function loadQuizQuestion() {
+            const q = kuisData[state.currentQuizIndex];
+            document.getElementById('quiz-current-num').innerText = state.currentQuizIndex + 1;
+            document.getElementById('quiz-progress').style.width = `${((state.currentQuizIndex) / kuisData.length) * 100}%`;
+            
+            document.getElementById('quiz-question-container').innerText = q.q;
+            
+            const optCont = document.getElementById('quiz-options');
+            optCont.innerHTML = '';
+            
+            q.opts.forEach((o, i) => {
+                optCont.innerHTML += `
+                    <button onclick="answerQuiz(${i})" class="w-full text-left p-4 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-primary hover:text-white dark:hover:bg-primary dark:text-gray-200 transition-colors font-medium shadow-sm">
+                        ${String.fromCharCode(65 + i)}. ${o}
+                    </button>
+                `;
+            });
+            
+            document.getElementById('quiz-feedback-box').classList.add('hidden');
+        }
+
+        function answerQuiz(selectedIndex) {
+            const q = kuisData[state.currentQuizIndex];
+            const isCorrect = selectedIndex === q.ans;
+            
+            if(isCorrect) state.scores.kuis += 10;
+            
+            // Disable buttons
+            const btns = document.getElementById('quiz-options').querySelectorAll('button');
+            btns.forEach((b, i) => {
+                b.disabled = true;
+                if(i === q.ans) {
+                    b.className = "w-full text-left p-4 rounded-xl border border-green-500 bg-green-50 text-green-800 font-bold shadow-sm"; // Correct
+                } else if (i === selectedIndex && !isCorrect) {
+                    b.className = "w-full text-left p-4 rounded-xl border border-red-500 bg-red-50 text-red-800 font-medium shadow-sm"; // Wrong
+                } else {
+                    b.className = "w-full text-left p-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 font-medium shadow-sm opacity-50"; // Neutral
+                }
+            });
+
+            // Show Feedback
+            const fbBox = document.getElementById('quiz-feedback-box');
+            const fbTitle = document.getElementById('quiz-feedback-title');
+            const fbDesc = document.getElementById('quiz-feedback-desc');
+            
+            fbBox.classList.remove('hidden', 'bg-green-50', 'border-green-200', 'bg-red-50', 'border-red-200');
+            if(isCorrect) {
+                fbBox.classList.add('bg-green-50', 'border-green-200');
+                fbTitle.className = "font-bold text-lg mb-2 flex items-center text-green-700";
+                fbTitle.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Tepat Sekali!';
+            } else {
+                fbBox.classList.add('bg-red-50', 'border-red-200');
+                fbTitle.className = "font-bold text-lg mb-2 flex items-center text-red-700";
+                fbTitle.innerHTML = '<i class="fas fa-times-circle mr-2"></i> Kurang Tepat';
+            }
+            fbDesc.innerText = q.exp;
+        }
+
+        function nextQuizQuestion() {
+            state.currentQuizIndex++;
+            if(state.currentQuizIndex >= kuisData.length) {
+                finishQuiz();
+            } else {
+                loadQuizQuestion();
+            }
+        }
+
+        function finishQuiz() {
+            clearInterval(state.quizInterval);
+            document.getElementById('quiz-area').classList.add('hidden');
+            document.getElementById('quiz-result').classList.remove('hidden');
+            
+            document.getElementById('quiz-final-score').innerText = state.scores.kuis;
+            
+            let msg = "";
+            if(state.scores.kuis >= 80) {
+                msg = "Luar biasa! Analisismu sangat tajam.";
+                triggerConfetti();
+            } else {
+                msg = "Teruslah berlatih! Computational Thinking butuh pembiasaan.";
+            }
+            document.getElementById('quiz-final-message').innerText = msg;
+        }
+
+        function startAsesmenAkhir() {
+            document.getElementById('asesmen-akhir-start').classList.add('hidden');
+            document.getElementById('asesmen-akhir-area').classList.remove('hidden');
+        }
+
+        function submitAsesmenAkhir() {
+            let score = 0;
+            let answered = 0;
+            
+            soalAkhir.forEach((s, idx) => {
+                const selected = document.querySelector(`input[name="akhir-${idx}"]:checked`);
+                if(selected) {
+                    answered++;
+                    if(parseInt(selected.value) === s.ans) score += 10;
+                }
+            });
+
+            if(answered < soalAkhir.length) {
+                alert("Harap jawab semua pertanyaan asesmen akhir untuk mendapatkan sertifikat.");
+                return;
+            }
+
+            state.scores.akhir = score;
+            document.getElementById('asesmen-akhir-area').classList.add('hidden');
+            
+            const res = document.getElementById('asesmen-akhir-result');
+            res.classList.remove('hidden');
+            
+            document.getElementById('akhir-score-display').innerText = score;
+            
+            let predicate = "";
+            let pColor = "";
+            if(score >= 90) { predicate = "Sangat Baik"; pColor = "bg-green-100 text-green-700"; triggerConfetti(); }
+            else if(score >= 80) { predicate = "Baik"; pColor = "bg-blue-100 text-blue-700"; }
+            else if(score >= 70) { predicate = "Cukup"; pColor = "bg-yellow-100 text-yellow-700"; }
+            else { predicate = "Perlu Bimbingan"; pColor = "bg-red-100 text-red-700"; }
+            
+            const predEl = document.getElementById('akhir-predicate');
+            predEl.innerText = predicate;
+            predEl.className = `text-2xl font-bold mb-6 px-6 py-2 rounded-full inline-block ${pColor}`;
+            
+            // Update certificate details
+            document.getElementById('cert-score').innerText = score;
+            document.getElementById('cert-predicate').innerText = predicate;
+        }
+
+        function submitRefleksi() {
+            // Assume validation passed
+            finishSection('refleksi');
+            navigateTo('sertifikat');
+        }
+
+        function triggerConfetti() {
+            var duration = 3000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#65DCD5', '#8B5CF6', '#ffffff']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#65DCD5', '#8B5CF6', '#ffffff']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+    </script>
+</body>
+</html>
