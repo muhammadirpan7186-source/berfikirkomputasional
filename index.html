@@ -898,7 +898,8 @@
 
             if(num === 4) {
                 // If they reach the last tab, mark materi as complete
-                setTimeout(() => finishSection('materi'), 2000);
+                state.progress.add('materi');
+                updateProgress();
             }
         }
 
